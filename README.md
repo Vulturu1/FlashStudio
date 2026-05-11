@@ -2,7 +2,7 @@
 
 A clean, dark-themed flashcard study app that runs entirely in your browser — no installs, no accounts, no data sent anywhere.
 
-🔗 **[Open FlashStudio →](https://vulturu1.github.io/FlashStudio/)**
+🔗 **[Open FlashStudio →](https://YOUR-USERNAME.github.io/YOUR-REPO-NAME)**
 
 If FlashStudio has helped your studying, please consider **⭐ starring the repository** — it helps others find the project and takes just a second!
 
@@ -32,7 +32,7 @@ Fill in the **Front** (question) and **Back** (answer) fields for each card. Opt
 2. Click **Generate Prompt**, then **Copy Prompt**
 3. Open any AI chat (Claude, ChatGPT, Gemini, etc.) and upload your study materials — textbook pages, lecture slides, PDFs, notes
 4. Paste the prompt and press Enter
-5. Copy the AI's JSON response into a text file and save it as `deck.json`
+5. Download the `deck.json` file the AI produces directly
 6. Back in FlashStudio, go to **Build Deck → ⬆ Import .json** and load the file
 
 ---

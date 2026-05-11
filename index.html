@@ -234,8 +234,8 @@ kbd{background:var(--border);border-radius:4px;padding:2px 8px;font-family:var(-
             <div class="step-hint">Fill in the topic, card count, and optional groupings to tailor the output before copying.</div>
           </li>
           <li>
-            <strong>Save the AI&rsquo;s response</strong> as a <code style="color:var(--green);font-size:14px">deck.json</code> file.<br/>
-            <div class="step-hint">The AI will return a raw JSON block &mdash; copy it into a text editor and save with the .json extension.</div>
+            <strong>Download the <code style="color:var(--green);font-size:14px">deck.json</code> file</strong> the AI generates and saves for you.<br/>
+            <div class="step-hint">The AI will produce a downloadable .json file directly &mdash; no copying or text editors needed. Just save it to your computer.</div>
           </li>
           <li>
             <strong>Import the .json</strong> on the <em>Build Deck</em> tab using <em>&#8593; Import .json</em> and start studying immediately.
@@ -513,8 +513,8 @@ function buildPrompt(){
     ?'- Number of cards: Determine the ideal number yourself based on the depth and breadth of the provided materials. Cover all key concepts thoroughly without padding.'
     :`- Number of cards: ${count}`;
   const closingLine=isAuto
-    ?'Generate as many cards as needed to comprehensively cover the provided context materials. Do not pad with redundant cards, but do not omit important concepts.'
-    :`Generate exactly ${count} cards based on the provided context materials.`;
+    ?'Generate as many cards as needed to comprehensively cover the provided context materials. Do not pad with redundant cards, but do not omit important concepts. Deliver the result as a downloadable .json file named after the deck title.'
+    :`Generate exactly ${count} cards based on the provided context materials. Deliver the result as a downloadable .json file named after the deck title.`;
   return `You are a flashcard generation assistant. Using the context materials I have provided (uploaded files, text, or pasted content), generate a flashcard deck in strict JSON format.
 
 REQUIREMENTS:
@@ -525,7 +525,7 @@ REQUIREMENTS:
 - Include a "sub" field for any useful clarifying note, mnemonic, or context clue (leave as "" if none needed).
 - All card IDs must be unique 8-character alphanumeric strings.
 
-OUTPUT FORMAT — Return ONLY valid JSON, no markdown fences, no preamble, no explanation. Your entire response must be parseable JSON:
+OUTPUT FORMAT — Do NOT return a raw text block or markdown. Instead, produce a downloadable file named after the deck title with a .json extension containing the JSON below. Your response should deliver the file directly so the user can download it immediately. The file contents must be valid, parseable JSON with no markdown fences or preamble:
 
 {
   "title": "${topic}",
