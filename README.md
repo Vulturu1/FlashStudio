@@ -2,7 +2,7 @@
 
 A clean, dark-themed flashcard study app that runs entirely in your browser — no installs, no accounts, no data sent anywhere.
 
-🔗 **[Open FlashStudio →](https://YOUR-USERNAME.github.io/YOUR-REPO-NAME)**
+🔗 **[Open FlashStudio →](https://vulturu1.github.io/FlashStudio/)**
 
 If FlashStudio has helped your studying, please consider **⭐ starring the repository** — it helps others find the project and takes just a second!
 
