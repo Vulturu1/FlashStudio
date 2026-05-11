@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flashcard Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--panel:#161b22;--card-front:#1a2332;--card-back:#0f2318;
+  --green:#4ade80;--green-light:#86efac;--gold:#fbbf24;--red:#ef4444;
+  --muted:#8b949e;--border:#30363d;--text:#e6edf3;
+  --serif:'Playfair Display',serif;--mono:'DM Mono',monospace;
+}
+body{font-family:var(--mono);background:var(--bg);color:var(--text);min-height:100vh;position:relative}
+body::before{content:'';position:fixed;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(74,222,128,0.03) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(74,222,128,0.03) 40px);pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:24px 16px 60px}
+.app-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.app-logo{font-family:var(--serif);font-size:25px;color:var(--green);letter-spacing:.5px}
+.app-logo span{color:var(--gold)}
+.tab-bar{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border)}
+.tab-btn{font-family:var(--mono);font-size:14px;text-transform:uppercase;letter-spacing:1px;padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;transition:all .2s;margin-bottom:-1px}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green)}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+.panel-title{font-size:14px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:16px}
+.form-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.form-group{display:flex;flex-direction:column;gap:6px;flex:1;min-width:180px}
+label{font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+input[type="text"],textarea,select{font-family:var(--mono);font-size:16px;background:#0d1117;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .2s;resize:vertical}
+input[type="text"]:focus,textarea:focus{border-color:var(--green)}
+textarea{min-height:80px}
+.radio-group{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.radio-option{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--muted);cursor:pointer}
+.radio-option input{accent-color:var(--green);cursor:pointer}
+.btn{font-family:var(--mono);font-size:14px;text-transform:uppercase;letter-spacing:1px;padding:10px 20px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--green);color:#000;border-color:var(--green)}
+.btn-primary:hover{background:var(--green-light)}
+.btn-primary:disabled{background:#2a3a2a;color:var(--muted);border-color:var(--border);cursor:not-allowed}
+.btn-secondary{background:transparent;color:var(--green);border-color:var(--green)}
+.btn-secondary:hover{background:rgba(74,222,128,.08)}
+.btn-gold{background:transparent;color:var(--gold);border-color:var(--gold)}
+.btn-gold:hover{background:rgba(251,191,36,.08)}
+.btn-danger{background:transparent;color:var(--red);border-color:var(--red)}
+.btn-danger:hover{background:rgba(239,68,68,.1)}
+.btn-muted{background:transparent;color:var(--muted);border-color:var(--border)}
+.btn-muted:hover{color:var(--text);border-color:var(--muted)}
+.btn-sm{padding:6px 12px;font-size:13px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.card-count{font-size:15px;color:var(--muted);margin-bottom:12px}
+.card-count span{color:var(--green);font-weight:500}
+.card-list{display:flex;flex-direction:column;gap:8px}
+.card-list-item{display:flex;align-items:center;gap:10px;background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:10px 14px;transition:border-color .2s}
+.cli-front{flex:1;font-size:16px;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cli-cat{font-size:13px;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;border-radius:20px;background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2);white-space:nowrap}
+.cli-actions{display:flex;gap:6px}
+.empty-state{text-align:center;padding:40px 20px;font-style:italic;color:var(--muted);font-size:16px}
+#study-mode{display:none}
+.study-header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.study-title{font-family:var(--serif);font-size:27px;color:var(--text);flex:1}
+.back-link{font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:4px;transition:color .2s}
+.back-link:hover{color:var(--green)}
+.progress-wrap{margin-bottom:20px}
+.progress-meta{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:6px}
+.progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--green),var(--gold));transition:width .4s ease}
+.filter-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.filter-tab{font-family:var(--mono);font-size:13px;text-transform:uppercase;letter-spacing:1px;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s}
+.filter-tab:hover{color:var(--text);border-color:var(--muted)}
+.filter-tab.active{background:var(--green);color:#000;border-color:var(--green)}
+.filter-tab.review-tab{color:var(--gold);border-color:rgba(251,191,36,.3)}
+.filter-tab.review-tab.active{background:var(--gold);color:#000}
+.filter-tab:disabled{opacity:.3;cursor:not-allowed}
+.scene{perspective:1200px;width:100%;max-width:640px;height:320px;margin:0 auto 24px;cursor:pointer}
+.card-flip{width:100%;height:100%;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,0,.2,1);position:relative}
+.card-flip.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:28px 32px;display:flex;flex-direction:column;justify-content:center;animation:fadeUp .35s ease forwards}
+.card-front-face{background:var(--card-front);border:1px solid var(--border)}
+.card-back-face{background:var(--card-back);border:1px solid rgba(74,222,128,.25);transform:rotateY(180deg)}
+.card-badge{position:absolute;top:16px;left:20px;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;padding:3px 10px;border-radius:20px;border:1px solid}
+.card-front-face .card-badge{color:var(--muted);border-color:var(--border)}
+.card-back-face .card-badge{color:var(--green);border-color:rgba(74,222,128,.3)}
+.card-hint{position:absolute;bottom:14px;right:18px;font-size:13px;color:var(--muted);letter-spacing:.5px}
+.card-question{font-family:var(--serif);font-size:25px;line-height:1.5;color:var(--text);text-align:center}
+.card-question strong{color:var(--gold);font-style:normal}
+.card-answer-single{font-family:var(--serif);font-size:29px;font-weight:700;color:var(--green);text-align:center;line-height:1.4}
+.card-answer-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+.answer-pill{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.25);border-radius:20px;padding:5px 14px;font-size:16px}
+.card-subnote{font-size:14px;color:var(--muted);text-align:center;margin-top:12px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.verdict-row{display:flex;gap:12px;justify-content:center;margin-bottom:20px;min-height:44px;align-items:center}
+.verdict-row .btn{opacity:0;pointer-events:none;transition:opacity .3s}
+.verdict-row.visible .btn{opacity:1;pointer-events:auto}
+.btn-gotit{background:rgba(74,222,128,.12);color:var(--green);border-color:rgba(74,222,128,.3)}
+.btn-gotit:hover{background:rgba(74,222,128,.22)}
+.btn-review-later{background:rgba(251,191,36,.1);color:var(--gold);border-color:rgba(251,191,36,.3)}
+.btn-review-later:hover{background:rgba(251,191,36,.2)}
+.nav-row{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.stats-bar{display:flex;gap:32px;justify-content:center;padding:16px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:16px}
+.stat{text-align:center}
+.stat-num{font-size:25px;font-weight:700;line-height:1}
+.stat-label{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:4px}
+.stat-green .stat-num{color:var(--green)}
+.stat-gold .stat-num{color:var(--gold)}
+.stat-white .stat-num{color:var(--text)}
+.completion{display:none;flex-direction:column;align-items:center;text-align:center;padding:48px 24px;gap:16px}
+.completion.visible{display:flex}
+.completion-fraction{font-family:var(--serif);font-size:67px;color:var(--gold);line-height:1}
+.completion-heading{font-family:var(--serif);font-size:31px;color:var(--green)}
+.completion-sub{font-size:16px;color:var(--muted)}
+.completion-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.ai-instructions{background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.15);border-radius:10px;padding:18px 20px;margin-bottom:16px}
+.ai-instructions ol{padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.ai-instructions li{font-size:16px;color:var(--text);line-height:1.6}
+.ai-instructions li strong{color:var(--green)}
+.step-hint{font-size:14px;color:var(--muted);margin-top:2px}
+.prompt-config{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.prompt-box{background:#0d1117;border:1px solid var(--border);border-radius:10px;padding:16px;font-family:var(--mono);font-size:15px;color:var(--text);line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow-y:auto;user-select:text}
+.copy-success{color:var(--green);font-size:14px;display:none}
+.copy-success.show{display:inline}
+.shortcut-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;align-items:center}
+kbd{background:var(--border);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:14px;color:var(--text);display:inline-block}
+.hidden{display:none!important}
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- EDIT MODE -->
+<div id="edit-mode">
+  <div class="app-header">
+    <div class="app-logo">Flash<span>Studio</span></div>
+    <button class="btn btn-primary" id="btn-study" disabled>&#9654; Start Studying</button>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="build">&#127183; Build Deck</button>
+    <button class="tab-btn" data-tab="ai">&#129302; AI Generator</button>
+  </div>
+
+  <!-- BUILD DECK TAB -->
+  <div id="tab-build">
+    <div class="panel">
+      <div class="panel-title">Deck Settings</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Deck Title</label>
+          <input type="text" id="deck-title" placeholder="e.g. Biology 101" />
+        </div>
+        <div class="form-group">
+          <label>Description / Subtitle</label>
+          <input type="text" id="deck-desc" placeholder="Optional subtitle" />
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title" id="editor-panel-title">Add New Card</div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>Front &mdash; Question / Prompt</label>
+          <textarea id="card-front" placeholder="Enter the question or prompt&#8230;" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:8px">
+        <div class="form-group">
+          <label>Answer Type</label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="ans-type" value="single" checked /> Single Answer</label>
+            <label class="radio-option"><input type="radio" name="ans-type" value="list" /> List Answer (one per line)</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>Back &mdash; Answer</label>
+          <textarea id="card-back" placeholder="Enter the answer&#8230;" rows="3"></textarea>
+          <span style="font-size:14px;color:var(--muted)" id="list-hint" class="hidden">Enter one item per line &mdash; each will become a pill/tag.</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category / Group <span style="color:var(--muted)">(optional)</span></label>
+          <input type="text" id="card-category" placeholder="e.g. Chapter 3" />
+        </div>
+        <div class="form-group">
+          <label>Sub-Note <span style="color:var(--muted)">(optional)</span></label>
+          <input type="text" id="card-sub" placeholder="Small clarifying note&#8230;" />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-add-card">+ Add Card</button>
+        <button class="btn btn-muted hidden" id="btn-cancel-edit">&#10005; Cancel</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Cards in Deck</div>
+      <div class="card-count"><span id="card-count-num">0</span> cards in deck</div>
+      <div class="card-list" id="card-list">
+        <div class="empty-state" id="empty-state"><em>No cards yet &mdash; add your first card above</em></div>
+      </div>
+      <hr class="divider" />
+      <div class="btn-row">
+        <button class="btn btn-danger" id="btn-clear">&#128465; Clear All Cards</button>
+        <button class="btn btn-muted" id="btn-export">&#8595; Export .json</button>
+        <label class="btn btn-muted" style="cursor:pointer">
+          &#8593; Import .json
+          <input type="file" id="file-import" accept=".json" class="hidden" />
+        </label>
+      </div>
+    </div>
+  </div><!-- /tab-build -->
+
+  <!-- AI GENERATOR TAB -->
+  <div id="tab-ai" class="hidden">
+    <div class="panel">
+      <div class="panel-title">Generate a Deck with AI</div>
+
+      <div class="ai-instructions">
+        <ol>
+          <li>
+            <strong>Upload your context materials</strong> to an AI chat (Claude, ChatGPT, Gemini, etc.)<br/>
+            <div class="step-hint">Textbooks, lecture slides, study guides, PDFs, notes &mdash; anything works. The more context, the better the cards.</div>
+          </li>
+          <li>
+            <strong>Customize &amp; copy the prompt below</strong>, then paste it into the AI chat and press Enter.<br/>
+            <div class="step-hint">Fill in the topic, card count, and optional groupings to tailor the output before copying.</div>
+          </li>
+          <li>
+            <strong>Save the AI&rsquo;s response</strong> as a <code style="color:var(--green);font-size:14px">deck.json</code> file.<br/>
+            <div class="step-hint">The AI will return a raw JSON block &mdash; copy it into a text editor and save with the .json extension.</div>
+          </li>
+          <li>
+            <strong>Import the .json</strong> on the <em>Build Deck</em> tab using <em>&#8593; Import .json</em> and start studying immediately.
+          </li>
+        </ol>
+      </div>
+
+      <div class="prompt-config">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Topic / Subject</label>
+            <input type="text" id="ai-topic" placeholder="e.g. Cell Biology, WWII, Calculus&#8230;" />
+          </div>
+          <div class="form-group" style="max-width:160px">
+            <label>Card Count</label>
+            <input type="text" id="ai-count" value="auto" placeholder="e.g. 30, or leave auto" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Focus / Difficulty</label>
+            <input type="text" id="ai-difficulty" value="key terms, core concepts, and definitions" />
+          </div>
+          <div class="form-group">
+            <label>Category Groupings <span style="color:var(--muted)">(optional)</span></label>
+            <input type="text" id="ai-categories" placeholder="e.g. Chapter 1, Chapter 2&#8230;" />
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-bottom:14px">
+        <button class="btn btn-primary" id="btn-generate-prompt">&#8635; Generate Prompt</button>
+        <button class="btn btn-secondary" id="btn-copy-prompt">&#9138; Copy Prompt</button>
+        <span class="copy-success" id="copy-success">&#10003; Copied!</span>
+      </div>
+
+      <div class="prompt-box" id="prompt-box">Click &ldquo;Generate Prompt&rdquo; to build your AI prompt based on the fields above.</div>
+    </div>
+  </div><!-- /tab-ai -->
+
+</div><!-- /edit-mode -->
+
+
+<!-- STUDY MODE -->
+<div id="study-mode">
+
+  <div class="study-header">
+    <a class="back-link" id="btn-back">&#8592; Edit Deck</a>
+    <div class="study-title" id="study-title">Untitled Deck</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="progress-label">Card 1 of 1</span>
+      <span id="filter-label">All Cards</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="filter-tabs" id="filter-tabs"></div>
+
+  <div id="card-area">
+    <div class="scene" id="scene">
+      <div class="card-flip" id="card-flip">
+        <div class="card-face card-front-face">
+          <div class="card-badge">Question</div>
+          <div class="card-question" id="q-text"></div>
+          <div class="card-hint">tap to reveal &rarr;</div>
+        </div>
+        <div class="card-face card-back-face">
+          <div class="card-badge">Answer</div>
+          <div id="a-content"></div>
+          <div class="card-subnote" id="a-sub"></div>
+          <div class="card-hint">tap to flip back</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict-row" id="verdict-row">
+      <button class="btn btn-gotit" id="btn-gotit">&#10003; Got it</button>
+      <button class="btn btn-review-later" id="btn-review-later">&#9873; Review Later</button>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-muted" id="btn-prev">&#8592; Prev</button>
+      <button class="btn btn-primary" id="btn-next">Next &#8594;</button>
+      <button class="btn btn-muted" id="btn-shuffle">&#8651; Shuffle</button>
+    </div>
+  </div>
+
+  <div class="completion" id="completion">
+    <div class="completion-fraction" id="comp-fraction">0/0</div>
+    <div class="completion-heading">Deck Complete!</div>
+    <div class="completion-sub" id="comp-sub"></div>
+    <div class="completion-actions">
+      <button class="btn btn-primary" id="btn-start-over">&#8635; Start Over</button>
+      <button class="btn btn-gold hidden" id="btn-review-flagged">&#9873; Review Flagged Cards</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat stat-green"><div class="stat-num" id="stat-known">0</div><div class="stat-label">Known</div></div>
+    <div class="stat stat-gold"><div class="stat-num" id="stat-review">0</div><div class="stat-label">Review</div></div>
+    <div class="stat stat-white"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total</div></div>
+  </div>
+
+  <div class="panel" style="margin-top:20px">
+    <div class="panel-title">Keyboard Shortcuts</div>
+    <div class="shortcut-grid" style="font-size:15px;color:var(--muted)">
+      <kbd>Space</kbd><span>Flip card</span>
+      <kbd>Enter</kbd><span>Flip card</span>
+      <kbd>&rarr;</kbd><span>Next card</span>
+      <kbd>&larr;</kbd><span>Previous card</span>
+      <kbd>K</kbd><span>Mark &ldquo;Got it&rdquo; (after flip)</span>
+      <kbd>R</kbd><span>Mark &ldquo;Review later&rdquo; (after flip)</span>
+    </div>
+  </div>
+
+</div><!-- /study-mode -->
+
+</div><!-- /app -->
+
+<script>
+const $=id=>document.getElementById(id);
+const uid=()=>Math.random().toString(36).slice(2,10);
+const truncate=(s,n=60)=>s.length>n?s.slice(0,n)+'…':s;
+
+let deck={title:'',description:'',cards:[]};
+let editingId=null;
+let studyDeck=[],currentIndex=0,isFlipped=false,activeFilter='all';
+const knownSet=new Set(),reviewSet=new Set();
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const t=btn.dataset.tab;
+    $('tab-build').classList.toggle('hidden',t!=='build');
+    $('tab-ai').classList.toggle('hidden',t!=='ai');
+  });
+});
+
+// Deck settings
+$('deck-title').addEventListener('input',e=>{deck.title=e.target.value.trim();});
+$('deck-desc').addEventListener('input',e=>{deck.description=e.target.value.trim();});
+
+// Answer type toggle
+document.querySelectorAll('input[name="ans-type"]').forEach(r=>{
+  r.addEventListener('change',()=>{
+    const isList=document.querySelector('input[name="ans-type"]:checked').value==='list';
+    $('list-hint').classList.toggle('hidden',!isList);
+  });
+});
+
+// Add / save card
+$('btn-add-card').addEventListener('click',()=>{
+  const front=$('card-front').value.trim();
+  const back=$('card-back').value.trim();
+  if(!front||!back){alert('Front and Back are required.');return;}
+  const isList=document.querySelector('input[name="ans-type"]:checked').value==='list';
+  if(editingId){
+    const idx=deck.cards.findIndex(c=>c.id===editingId);
+    if(idx!==-1)deck.cards[idx]={id:editingId,front,back,isList,category:$('card-category').value.trim(),sub:$('card-sub').value.trim()};
+    editingId=null;
+    $('editor-panel-title').textContent='Add New Card';
+    $('btn-add-card').textContent='+ Add Card';
+    $('btn-cancel-edit').classList.add('hidden');
+  }else{
+    deck.cards.push({id:uid(),front,back,isList,category:$('card-category').value.trim(),sub:$('card-sub').value.trim()});
+  }
+  clearForm();renderCardList();updateStudyBtn();
+});
+
+$('btn-cancel-edit').addEventListener('click',()=>{
+  editingId=null;clearForm();
+  $('editor-panel-title').textContent='Add New Card';
+  $('btn-add-card').textContent='+ Add Card';
+  $('btn-cancel-edit').classList.add('hidden');
+});
+
+function clearForm(){
+  $('card-front').value='';$('card-back').value='';
+  $('card-category').value='';$('card-sub').value='';
+  document.querySelector('input[name="ans-type"][value="single"]').checked=true;
+  $('list-hint').classList.add('hidden');
+}
+
+function renderCardList(){
+  const list=$('card-list');
+  $('card-count-num').textContent=deck.cards.length;
+  if(!deck.cards.length){list.innerHTML='<div class="empty-state"><em>No cards yet &mdash; add your first card above</em></div>';return;}
+  list.innerHTML=deck.cards.map(c=>`
+    <div class="card-list-item">
+      <div class="cli-front">${truncate(c.front)}</div>
+      ${c.category?`<div class="cli-cat">${c.category}</div>`:''}
+      <div class="cli-actions">
+        <button class="btn btn-muted btn-sm btn-edit-card" data-id="${c.id}">&#9998; Edit</button>
+        <button class="btn btn-danger btn-sm btn-delete-card" data-id="${c.id}">&#10005;</button>
+      </div>
+    </div>`).join('');
+  list.querySelectorAll('.btn-edit-card').forEach(b=>b.addEventListener('click',()=>startEditCard(b.dataset.id)));
+  list.querySelectorAll('.btn-delete-card').forEach(b=>b.addEventListener('click',()=>deleteCard(b.dataset.id)));
+}
+
+function startEditCard(id){
+  const card=deck.cards.find(c=>c.id===id);if(!card)return;
+  editingId=id;
+  $('card-front').value=card.front;$('card-back').value=card.back;
+  $('card-category').value=card.category||'';$('card-sub').value=card.sub||'';
+  document.querySelector(`input[name="ans-type"][value="${card.isList?'list':'single'}"]`).checked=true;
+  $('list-hint').classList.toggle('hidden',!card.isList);
+  $('editor-panel-title').textContent='Edit Card';
+  $('btn-add-card').textContent='&#10003; Save Changes';
+  $('btn-cancel-edit').classList.remove('hidden');
+  $('card-front').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function deleteCard(id){
+  deck.cards=deck.cards.filter(c=>c.id!==id);
+  if(editingId===id){editingId=null;clearForm();$('editor-panel-title').textContent='Add New Card';$('btn-add-card').textContent='+ Add Card';$('btn-cancel-edit').classList.add('hidden');}
+  renderCardList();updateStudyBtn();
+}
+
+function updateStudyBtn(){$('btn-study').disabled=deck.cards.length===0;}
+
+// Clear all
+let clearStep=0;
+$('btn-clear').addEventListener('click',()=>{
+  if(clearStep===0){$('btn-clear').textContent='Confirm Clear?';clearStep=1;setTimeout(()=>{clearStep=0;$('btn-clear').textContent='&#128465; Clear All Cards';},3000);}
+  else{deck.cards=[];clearStep=0;$('btn-clear').textContent='&#128465; Clear All Cards';renderCardList();updateStudyBtn();}
+});
+
+// Export
+$('btn-export').addEventListener('click',()=>{
+  const fn=(deck.title||'flashcard-deck').replace(/\s+/g,'_').toLowerCase()+'.json';
+  const data=JSON.stringify({title:deck.title,description:deck.description,subject:deck.title,exportedAt:new Date().toISOString(),cardCount:deck.cards.length,cards:deck.cards},null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=fn;a.click();URL.revokeObjectURL(url);
+});
+
+// Import
+$('file-import').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!Array.isArray(data.cards))throw new Error('Invalid format: missing "cards" array.');
+      if(deck.cards.length>0&&!confirm(`Replace your current deck (${deck.cards.length} cards) with "${data.title||'imported deck'}"?`)){e.target.value='';return;}
+      deck.cards=data.cards.map(c=>({id:c.id||uid(),front:c.front||'',back:c.back||'',isList:!!c.isList,category:c.category||'',sub:c.sub||''}));
+      deck.title=data.title||'';deck.description=data.description||'';
+      $('deck-title').value=deck.title;$('deck-desc').value=deck.description;
+      renderCardList();updateStudyBtn();
+      alert(`&#10003; Imported "${deck.title}" — ${deck.cards.length} cards loaded.`);
+    }catch(err){alert('Import failed: '+err.message);}
+    e.target.value='';
+  };
+  reader.readAsText(file);
+});
+
+// AI Prompt generator
+function buildPrompt(){
+  const topic=$('ai-topic').value.trim()||'[your topic]';
+  const rawCount=$('ai-count').value.trim();
+  const isAuto=!rawCount||rawCount.toLowerCase()==='auto';
+  const count=isAuto?'auto':rawCount;
+  const difficulty=$('ai-difficulty').value.trim()||'key terms, core concepts, and definitions';
+  const categories=$('ai-categories').value.trim();
+  const catLine=categories
+    ?`\n- Use the following categories for the "category" field: ${categories}`
+    :'\n- Group cards into logical categories using the "category" field (e.g. sub-topics, chapters, or themes from the materials).';
+  const countLine=isAuto
+    ?'- Number of cards: Determine the ideal number yourself based on the depth and breadth of the provided materials. Cover all key concepts thoroughly without padding.'
+    :`- Number of cards: ${count}`;
+  const closingLine=isAuto
+    ?'Generate as many cards as needed to comprehensively cover the provided context materials. Do not pad with redundant cards, but do not omit important concepts.'
+    :`Generate exactly ${count} cards based on the provided context materials.`;
+  return `You are a flashcard generation assistant. Using the context materials I have provided (uploaded files, text, or pasted content), generate a flashcard deck in strict JSON format.
+
+REQUIREMENTS:
+- Topic / Subject: ${topic}
+- ${countLine}
+- Focus on: ${difficulty}${catLine}
+- For each card, determine if the answer is best as a single phrase (isList: false) or as a list of items (isList: true, back as newline-separated items).
+- Include a "sub" field for any useful clarifying note, mnemonic, or context clue (leave as "" if none needed).
+- All card IDs must be unique 8-character alphanumeric strings.
+
+OUTPUT FORMAT — Return ONLY valid JSON, no markdown fences, no preamble, no explanation. Your entire response must be parseable JSON:
+
+{
+  "title": "${topic}",
+  "description": "Generated flashcard deck covering ${topic}",
+  "subject": "${topic}",
+  "cards": [
+    {
+      "id": "a1b2c3d4",
+      "front": "What is [concept]?",
+      "back": "The answer here",
+      "isList": false,
+      "category": "Category Name",
+      "sub": "Optional clarifying note"
+    },
+    {
+      "id": "e5f6g7h8",
+      "front": "List the main components of [concept]:",
+      "back": "Item one\\nItem two\\nItem three",
+      "isList": true,
+      "category": "Category Name",
+      "sub": ""
+    }
+  ]
+}
+
+${closingLine}`;
+}
+
+$('btn-generate-prompt').addEventListener('click',()=>{$('prompt-box').textContent=buildPrompt();});
+
+$('btn-copy-prompt').addEventListener('click',()=>{
+  const text=$('prompt-box').textContent;
+  if(text.startsWith('Click')){alert('Click "Generate Prompt" first.');return;}
+  const show=()=>{const s=$('copy-success');s.classList.add('show');setTimeout(()=>s.classList.remove('show'),2000);};
+  navigator.clipboard.writeText(text).then(show).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);show();
+  });
+});
+
+['ai-topic','ai-count','ai-difficulty','ai-categories'].forEach(id=>{
+  $(id).addEventListener('input',()=>{if(!$('prompt-box').textContent.startsWith('Click'))$('prompt-box').textContent=buildPrompt();});
+});
+
+// Study mode
+$('btn-study').addEventListener('click',()=>{knownSet.clear();reviewSet.clear();activeFilter='all';enterStudyMode();});
+$('btn-back').addEventListener('click',()=>{$('study-mode').style.display='none';$('edit-mode').style.display='block';document.removeEventListener('keydown',handleKeydown);});
+
+function enterStudyMode(){
+  $('edit-mode').style.display='none';$('study-mode').style.display='block';
+  $('study-title').textContent=deck.title||'Untitled Deck';
+  buildFilterTabs();applyFilter();updateStats();
+  document.addEventListener('keydown',handleKeydown);
+}
+
+function buildFilterTabs(){
+  const cats=[...new Set(deck.cards.map(c=>c.category).filter(Boolean))];
+  const tabs=$('filter-tabs');tabs.innerHTML='';
+  const makeTab=(label,value,extra='')=>{
+    const btn=document.createElement('button');
+    btn.className=`filter-tab${extra?' '+extra:''}`;
+    btn.innerHTML=label;btn.dataset.filter=value;
+    btn.addEventListener('click',()=>{activeFilter=value;applyFilter();buildFilterTabs();});
+    if(value===activeFilter)btn.classList.add('active');
+    return btn;
+  };
+  tabs.appendChild(makeTab('All','all'));
+  cats.forEach(cat=>tabs.appendChild(makeTab(cat,cat)));
+  const rb=makeTab('&#9873; Review','review','review-tab');
+  if(reviewSet.size===0)rb.disabled=true;
+  tabs.appendChild(rb);
+}
+
+function applyFilter(){
+  if(activeFilter==='all')studyDeck=[...deck.cards];
+  else if(activeFilter==='review')studyDeck=deck.cards.filter(c=>reviewSet.has(c.id));
+  else studyDeck=deck.cards.filter(c=>c.category===activeFilter);
+  currentIndex=0;isFlipped=false;showCard();
+}
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
+
+function renderQuestion(text){
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/&lt;strong&gt;(.*?)&lt;\/strong&gt;/g,'<strong>$1</strong>');
+}
+
+function showCard(){
+  const comp=$('completion'),area=$('card-area');
+  if(!studyDeck.length||currentIndex>=studyDeck.length){area.style.display='none';comp.classList.add('visible');renderCompletion();return;}
+  area.style.display='block';comp.classList.remove('visible');
+  const card=studyDeck[currentIndex];
+  isFlipped=false;$('card-flip').classList.remove('flipped');$('verdict-row').classList.remove('visible');
+  $('q-text').innerHTML=renderQuestion(card.front);
+  const aC=$('a-content');
+  if(card.isList){
+    const items=card.back.split('\n').filter(s=>s.trim());
+    aC.innerHTML=`<div class="card-answer-list">${items.map(i=>`<span class="answer-pill">${i.trim()}</span>`).join('')}</div>`;
+  }else{aC.innerHTML=`<div class="card-answer-single">${card.back}</div>`;}
+  $('a-sub').textContent=card.sub||'';
+  // re-trigger animation
+  document.querySelectorAll('.card-face').forEach(f=>{f.style.animation='none';void f.offsetWidth;f.style.animation='';});
+  updateProgress();
+}
+
+function updateProgress(){
+  const total=studyDeck.length,idx=currentIndex;
+  const pct=total>0?Math.round((idx/total)*100):0;
+  $('progress-label').textContent=total?`Card ${idx+1} of ${total}`:'No cards';
+  $('filter-label').textContent=activeFilter==='all'?'All Cards':activeFilter==='review'?'&#9873; Flagged':activeFilter;
+  $('progress-fill').style.width=pct+'%';
+}
+
+function updateStats(){$('stat-known').textContent=knownSet.size;$('stat-review').textContent=reviewSet.size;$('stat-total').textContent=deck.cards.length;}
+
+function renderCompletion(){
+  const total=deck.cards.length;
+  $('comp-fraction').textContent=`${knownSet.size} / ${total}`;
+  $('comp-sub').textContent=`${knownSet.size} known · ${reviewSet.size} flagged · ${total-knownSet.size-reviewSet.size} unmarked`;
+  $('btn-review-flagged').classList.toggle('hidden',reviewSet.size===0);
+}
+
+$('scene').addEventListener('click',flipCard);
+function flipCard(){if(currentIndex>=studyDeck.length)return;isFlipped=!isFlipped;$('card-flip').classList.toggle('flipped',isFlipped);$('verdict-row').classList.toggle('visible',isFlipped);}
+
+$('btn-next').addEventListener('click',()=>nextCard());
+$('btn-prev').addEventListener('click',()=>{if(currentIndex>0){currentIndex--;isFlipped=false;showCard();}});
+$('btn-shuffle').addEventListener('click',()=>{shuffle(studyDeck);currentIndex=0;isFlipped=false;showCard();});
+$('btn-gotit').addEventListener('click',()=>markCard('known'));
+$('btn-review-later').addEventListener('click',()=>markCard('review'));
+
+function markCard(type){
+  if(!isFlipped||currentIndex>=studyDeck.length)return;
+  const id=studyDeck[currentIndex].id;
+  if(type==='known'){knownSet.add(id);reviewSet.delete(id);}else{reviewSet.add(id);knownSet.delete(id);}
+  updateStats();buildFilterTabs();nextCard();
+}
+
+function nextCard(){currentIndex++;if(currentIndex>=studyDeck.length)showCard();else{isFlipped=false;showCard();}}
+
+$('btn-start-over').addEventListener('click',()=>{
+  shuffle(studyDeck);currentIndex=0;isFlipped=false;
+  $('card-area').style.display='block';$('completion').classList.remove('visible');showCard();
+});
+
+$('btn-review-flagged').addEventListener('click',()=>{
+  activeFilter='review';buildFilterTabs();applyFilter();
+  $('completion').classList.remove('visible');$('card-area').style.display='block';
+});
+
+function handleKeydown(e){
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
+  switch(e.key){
+    case ' ':case 'Enter':e.preventDefault();flipCard();break;
+    case 'ArrowRight':e.preventDefault();nextCard();break;
+    case 'ArrowLeft':e.preventDefault();if(currentIndex>0){currentIndex--;isFlipped=false;showCard();}break;
+    case 'k':case 'K':if(isFlipped)markCard('known');break;
+    case 'r':case 'R':if(isFlipped)markCard('review');break;
+  }
+}
+
+renderCardList();updateStudyBtn();
+</script>
+</body>
+</html>
