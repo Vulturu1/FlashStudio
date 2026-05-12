@@ -26,6 +26,7 @@ body::before{content:'';position:fixed;inset:0;background-image:repeating-linear
 .tab-btn.active{color:var(--green);border-bottom-color:var(--green)}
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
 .panel-title{font-size:14px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:16px}
+.panel-title-lg{font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text);margin-bottom:16px}
 .form-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 .form-group{display:flex;flex-direction:column;gap:6px;flex:1;min-width:180px}
 label{font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
@@ -41,6 +42,7 @@ textarea{min-height:80px}
 .btn-primary:disabled{background:#2a3a2a;color:var(--muted);border-color:var(--border);cursor:not-allowed}
 .btn-secondary{background:transparent;color:var(--green);border-color:var(--green)}
 .btn-secondary:hover{background:rgba(74,222,128,.08)}
+.btn-secondary:disabled{background:transparent;color:var(--muted);border-color:var(--border);cursor:not-allowed;opacity:.45}
 .btn-gold{background:transparent;color:var(--gold);border-color:var(--gold)}
 .btn-gold:hover{background:rgba(251,191,36,.08)}
 .btn-danger{background:transparent;color:var(--red);border-color:var(--red)}
@@ -153,7 +155,7 @@ kbd{background:var(--border);border-radius:4px;padding:2px 8px;font-family:var(-
   <!-- BUILD DECK TAB -->
   <div id="tab-build">
     <div class="panel">
-      <div class="panel-title">Deck Settings</div>
+      <div class="panel-title-lg">Deck Settings</div>
       <div class="form-row">
         <div class="form-group">
           <label>Deck Title</label>
@@ -167,7 +169,7 @@ kbd{background:var(--border);border-radius:4px;padding:2px 8px;font-family:var(-
     </div>
 
     <div class="panel">
-      <div class="panel-title" id="editor-panel-title">Add New Card</div>
+      <div class="panel-title-lg" id="editor-panel-title">Add New Card</div>
       <div class="form-row">
         <div class="form-group" style="flex:2">
           <label>Front &mdash; Question / Prompt</label>
@@ -176,7 +178,7 @@ kbd{background:var(--border);border-radius:4px;padding:2px 8px;font-family:var(-
       </div>
       <div class="form-row" style="margin-bottom:8px">
         <div class="form-group">
-          <label>Answer Type</label>
+          <label style="font-size:14px;font-weight:700;color:var(--text)">Answer Type</label>
           <div class="radio-group">
             <label class="radio-option"><input type="radio" name="ans-type" value="single" checked /> Single Answer</label>
             <label class="radio-option"><input type="radio" name="ans-type" value="list" /> List Answer (one per line)</label>
@@ -207,16 +209,16 @@ kbd{background:var(--border);border-radius:4px;padding:2px 8px;font-family:var(-
     </div>
 
     <div class="panel">
-      <div class="panel-title">Cards in Deck</div>
+      <div class="panel-title-lg">Cards in Deck</div>
       <div class="card-count"><span id="card-count-num">0</span> cards in deck</div>
       <div class="card-list" id="card-list">
         <div class="empty-state" id="empty-state"><em>No cards yet &mdash; add your first card above</em></div>
       </div>
       <hr class="divider" />
-      <div class="btn-row">
-        <button class="btn btn-danger" id="btn-clear">&#128465; Clear All Cards</button>
-        <button class="btn btn-muted" id="btn-export">&#8595; Export .json</button>
-        <label class="btn btn-muted" style="cursor:pointer">
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn btn-danger" id="btn-clear" style="flex:1">&#128465; Clear All Cards</button>
+        <button class="btn btn-muted" id="btn-export" style="flex:1;justify-content:center">&#8595; Export .json</button>
+        <label class="btn btn-muted" style="cursor:pointer;flex:1;justify-content:center;border:2px dashed #ffffff;border-radius:8px">
           &#8593; Import .json
           <input type="file" id="file-import" accept=".json" class="hidden" />
         </label>
@@ -227,7 +229,7 @@ kbd{background:var(--border);border-radius:4px;padding:2px 8px;font-family:var(-
   <!-- AI GENERATOR TAB -->
   <div id="tab-ai" class="hidden">
     <div class="panel">
-      <div class="panel-title">Generate a Deck with AI</div>
+      <div class="panel-title-lg">Generate a Deck with AI</div>
 
       <div class="ai-instructions">
         <ol>
@@ -273,8 +275,8 @@ kbd{background:var(--border);border-radius:4px;padding:2px 8px;font-family:var(-
       </div>
 
       <div class="btn-row" style="margin-bottom:14px">
-        <button class="btn btn-primary" id="btn-generate-prompt">&#8635; Generate Prompt</button>
-        <button class="btn btn-secondary" id="btn-copy-prompt">&#9138; Copy Prompt</button>
+        <button class="btn btn-primary" id="btn-generate-prompt" style="flex:1">⟳ Generate Prompt</button>
+        <button class="btn btn-secondary" id="btn-copy-prompt" disabled><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;flex-shrink:0"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Prompt</button>
         <span class="copy-success" id="copy-success">&#10003; Copied!</span>
       </div>
 
@@ -561,7 +563,7 @@ OUTPUT FORMAT — Do NOT return a raw text block or markdown. Instead, produce a
 ${closingLine}`;
 }
 
-$('btn-generate-prompt').addEventListener('click',()=>{$('prompt-box').textContent=buildPrompt();});
+$('btn-generate-prompt').addEventListener('click',()=>{$('prompt-box').textContent=buildPrompt();$('btn-copy-prompt').disabled=false;});
 
 $('btn-copy-prompt').addEventListener('click',()=>{
   const text=$('prompt-box').textContent;
