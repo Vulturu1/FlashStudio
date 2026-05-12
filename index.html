@@ -34,6 +34,12 @@ input[type="text"],textarea,select{font-family:var(--mono);font-size:16px;backgr
 input[type="text"]:focus,textarea:focus{border-color:var(--green)}
 textarea{min-height:80px}
 .radio-group{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.ans-toggle-wrap{display:flex;align-items:center;margin-top:6px}
+.ans-toggle{position:relative;display:inline-flex;background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:3px;gap:0;width:100%}
+.ans-toggle-option{flex:1;position:relative;z-index:1;text-align:center;padding:8px 12px;font-family:var(--mono);font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);cursor:pointer;transition:color .25s;user-select:none;border-radius:6px}
+.ans-toggle-option.active{color:#000}
+.ans-toggle-slider{position:absolute;top:3px;bottom:3px;left:3px;border-radius:6px;background:var(--green);transition:transform .25s cubic-bezier(.4,0,.2,1),width .25s cubic-bezier(.4,0,.2,1);z-index:0}
+
 .radio-option{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--muted);cursor:pointer}
 .radio-option input{accent-color:var(--green);cursor:pointer}
 .btn{font-family:var(--mono);font-size:14px;text-transform:uppercase;letter-spacing:1px;padding:10px 20px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
@@ -170,29 +176,32 @@ kbd{background:var(--border);border-radius:4px;padding:2px 8px;font-family:var(-
 
     <div class="panel">
       <div class="panel-title-lg" id="editor-panel-title">Add New Card</div>
-      <div class="form-row">
+      <div class="form-row" style="margin-bottom:20px">
         <div class="form-group" style="flex:2">
           <label>Front &mdash; Question / Prompt</label>
           <textarea id="card-front" placeholder="Enter the question or prompt&#8230;" rows="3"></textarea>
         </div>
       </div>
-      <div class="form-row" style="margin-bottom:8px">
+      <div class="form-row" style="margin-top:8px;margin-bottom:8px">
         <div class="form-group">
           <label style="font-size:14px;font-weight:700;color:var(--text)">Answer Type</label>
-          <div class="radio-group">
-            <label class="radio-option"><input type="radio" name="ans-type" value="single" checked /> Single Answer</label>
-            <label class="radio-option"><input type="radio" name="ans-type" value="list" /> List Answer (one per line)</label>
+          <div class="ans-toggle-wrap">
+            <div class="ans-toggle" id="ans-toggle">
+              <div class="ans-toggle-slider" id="ans-slider"></div>
+              <div class="ans-toggle-option active" data-value="single">Single Answer</div>
+              <div class="ans-toggle-option" data-value="list">List Answer</div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="form-row">
+      <div class="form-row" style="margin-top:8px;margin-bottom:20px">
         <div class="form-group" style="flex:2">
           <label>Back &mdash; Answer</label>
           <textarea id="card-back" placeholder="Enter the answer&#8230;" rows="3"></textarea>
           <span style="font-size:14px;color:var(--muted)" id="list-hint" class="hidden">Enter one item per line &mdash; each will become a pill/tag.</span>
         </div>
       </div>
-      <div class="form-row">
+      <div class="form-row" style="margin-bottom:8px">
         <div class="form-group">
           <label>Category / Group <span style="color:var(--muted)">(optional)</span></label>
           <input type="text" id="card-category" placeholder="e.g. Chapter 3" />
@@ -393,19 +402,34 @@ $('deck-title').addEventListener('input',e=>{deck.title=e.target.value.trim();})
 $('deck-desc').addEventListener('input',e=>{deck.description=e.target.value.trim();});
 
 // Answer type toggle
-document.querySelectorAll('input[name="ans-type"]').forEach(r=>{
-  r.addEventListener('change',()=>{
-    const isList=document.querySelector('input[name="ans-type"]:checked').value==='list';
-    $('list-hint').classList.toggle('hidden',!isList);
+// Answer type toggle
+let ansType='single';
+function setAnsType(val){
+  ansType=val;
+  const opts=document.querySelectorAll('.ans-toggle-option');
+  const slider=$('ans-slider');
+  opts.forEach((o,i)=>{
+    const isActive=o.dataset.value===val;
+    o.classList.toggle('active',isActive);
+    if(isActive){
+      slider.style.width=o.offsetWidth+'px';
+      slider.style.transform=`translateX(${o.offsetLeft-3}px)`;
+    }
   });
+  $('list-hint').classList.toggle('hidden',val!=='list');
+}
+document.querySelectorAll('.ans-toggle-option').forEach(o=>{
+  o.addEventListener('click',()=>setAnsType(o.dataset.value));
 });
+// Init slider position after render
+requestAnimationFrame(()=>setAnsType('single'));
 
 // Add / save card
 $('btn-add-card').addEventListener('click',()=>{
   const front=$('card-front').value.trim();
   const back=$('card-back').value.trim();
   if(!front||!back){alert('Front and Back are required.');return;}
-  const isList=document.querySelector('input[name="ans-type"]:checked').value==='list';
+  const isList=ansType==='list';
   if(editingId){
     const idx=deck.cards.findIndex(c=>c.id===editingId);
     if(idx!==-1)deck.cards[idx]={id:editingId,front,back,isList,category:$('card-category').value.trim(),sub:$('card-sub').value.trim()};
@@ -429,8 +453,7 @@ $('btn-cancel-edit').addEventListener('click',()=>{
 function clearForm(){
   $('card-front').value='';$('card-back').value='';
   $('card-category').value='';$('card-sub').value='';
-  document.querySelector('input[name="ans-type"][value="single"]').checked=true;
-  $('list-hint').classList.add('hidden');
+  setAnsType('single');
 }
 
 function renderCardList(){
@@ -455,8 +478,7 @@ function startEditCard(id){
   editingId=id;
   $('card-front').value=card.front;$('card-back').value=card.back;
   $('card-category').value=card.category||'';$('card-sub').value=card.sub||'';
-  document.querySelector(`input[name="ans-type"][value="${card.isList?'list':'single'}"]`).checked=true;
-  $('list-hint').classList.toggle('hidden',!card.isList);
+  setAnsType(card.isList?'list':'single');
   $('editor-panel-title').textContent='Edit Card';
   $('btn-add-card').textContent='&#10003; Save Changes';
   $('btn-cancel-edit').classList.remove('hidden');
